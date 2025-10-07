@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.31)
+project(MinecraftClone)
+
+set(CMAKE_CXX_STANDARD 20)
+
+add_executable(MinecraftClone src/main.cpp libraries/glad.c)
+
+target_include_directories(MinecraftClone PRIVATE ${CMAKE_SOURCE_DIR}/libraries/include)
+
+target_link_libraries(MinecraftClone ${CMAKE_SOURCE_DIR}/libraries/libs/libglfw3.a)

@@ -5,7 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(MinecraftClone src/main.cpp libraries/glad.c
         src/Shader.cpp
-        src/Shader.h)
+        src/Shader.h
+        src/MouseInput.h
+        src/MouseInput.cpp)
 
 target_include_directories(MinecraftClone PRIVATE ${CMAKE_SOURCE_DIR}/libraries/include)
 

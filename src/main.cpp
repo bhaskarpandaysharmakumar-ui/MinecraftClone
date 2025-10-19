@@ -3,12 +3,14 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <stbi/stb_image.h>
 
 #include "Shader.h"
 #include "MouseInput.h"
+#include "KeyboardInput.h"
+#include "Camera.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
@@ -34,6 +36,8 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwSetCursorPosCallback(window, MouseInput::CursorPosCallback);
+    glfwSetKeyCallback(window, KeyboardInput::KeyCallback);
+
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     float vertices[] = {
@@ -67,6 +71,32 @@ int main() {
         0.5f, -0.5f, -0.5f,
         0.5f, -0.5f, 0.5f
     };
+    float texCoords[] = {
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+        1.f, 0.f,
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+        1.f, 0.f,
+    };
     unsigned int indices[] = {
         0, 1, 3,
         3, 1, 2,
@@ -82,7 +112,7 @@ int main() {
         23, 21, 22
     };
 
-    unsigned int vbo, vao, ebo;
+    unsigned int vbo, vao, ebo, tbo;
     Shader shader("../res/shaders/shader.vs", "../res/shaders/shader.fs");
 
     glGenVertexArrays(1, &vao);
@@ -94,21 +124,41 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    glGenBuffers(1, &tbo);
+    glBindBuffer(GL_ARRAY_BUFFER, tbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glm::mat4 proj = glm::perspective(glm::radians(77.f), 16.f / 9.f, 0.1f, 1000.f);
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("../res/textures/Grass.jpg", &width, &height, &nrChannels, 0);
 
-    glm::vec3 camPos = {0, 0, 3};
-    float sensitivity = 0.08f;
-    float speed = 4.f;
-    float pitch = 0.f, yaw = 0.f;
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+
+    stbi_image_free(data);
+
+    Camera camera;
 
     float dt = 0.f;
     float previousTime = (float) glfwGetTime();
 
-    // TODO: why does multiplying dt to pitch and yaw make mouse input frame rate "dependent"
     while(!glfwWindowShouldClose(window))
     {
         glEnable(GL_DEPTH_TEST);
@@ -119,47 +169,24 @@ int main() {
         dt = currentTime - previousTime;
 
         shader.Bind();
+        glBindTexture(GL_TEXTURE_2D, texture);
 
         auto model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(-45.f), {1, 0, 0});
 
-        pitch -= MouseInput::GetOffsetY() * sensitivity;
-        yaw += MouseInput::GetOffsetX() * sensitivity;
-
-        auto view = glm::mat4(1.f);
-        view = glm::rotate(view, glm::radians(pitch), {1, 0, 0});
-        view = glm::rotate(view, glm::radians(yaw), {0, 1, 0});
-        view = glm::translate(view, -camPos);
-
-        glm::vec3 forward = {view[0][2], view[1][2], view[2][2]};
-        glm::vec3 left = {view[0][0], view[1][0], view[2][0]};
-        glm::vec3 up = {view[0][1], view[1][1], view[2][1]};
-
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            camPos -= speed * forward * dt;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            camPos += speed * forward * dt;
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            camPos -= speed * left * dt;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            camPos += speed * left * dt;
-        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-            camPos += speed * up * dt;
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-            camPos -= speed * up * dt;
+        camera.Update(shader, dt);
 
         shader.SetMat4("model", model);
-        shader.SetMat4("view", view);
-        shader.SetMat4("proj", proj);
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         shader.Unbind();
+        glBindTexture(GL_TEXTURE_2D, 0);
 
-        MouseInput::EndFrame();
         previousTime = currentTime;
+        MouseInput::EndFrame();
+        KeyboardInput::EndFrame();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

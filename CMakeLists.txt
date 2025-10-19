@@ -7,7 +7,13 @@ add_executable(MinecraftClone src/main.cpp libraries/glad.c
         src/Shader.cpp
         src/Shader.h
         src/MouseInput.h
-        src/MouseInput.cpp)
+        src/MouseInput.cpp
+        libraries/include/stbi/stb_image.h
+        libraries/stb_image.cpp
+        src/Camera.cpp
+        src/Camera.h
+        src/KeyboardInput.cpp
+        src/KeyboardInput.h)
 
 target_include_directories(MinecraftClone PRIVATE ${CMAKE_SOURCE_DIR}/libraries/include)
 

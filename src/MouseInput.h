@@ -20,7 +20,7 @@ public:
     static float GetPosY();
 
 private:
-    MouseInput() = default;
+    MouseInput() {};
 
     float posX, posY, lastPosX, lastPosY;
     static float Signum(float x);

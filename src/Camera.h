@@ -13,6 +13,6 @@ public:
     void Update(const Shader &shader, float dt);
 
 private:
-    glm::mat4 proj{};
+    glm::mat4 proj;
     float yaw, pitch;
 };

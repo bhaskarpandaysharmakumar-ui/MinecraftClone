@@ -15,6 +15,7 @@ public:
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void EndFrame();
     static bool KeyPressed(unsigned int key);
+    static bool KeyClicked(unsigned int key);
 
 private:
     KeyboardInput() {}

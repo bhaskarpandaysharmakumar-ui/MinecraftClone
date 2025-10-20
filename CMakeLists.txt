@@ -13,7 +13,9 @@ add_executable(MinecraftClone src/main.cpp libraries/glad.c
         src/Camera.cpp
         src/Camera.h
         src/KeyboardInput.cpp
-        src/KeyboardInput.h)
+        src/KeyboardInput.h
+        src/Chunk.cpp
+        src/Chunk.h)
 
 target_include_directories(MinecraftClone PRIVATE ${CMAKE_SOURCE_DIR}/libraries/include)
 

@@ -9,6 +9,7 @@
 #include "MouseInput.h"
 #include "KeyboardInput.h"
 #include "Camera.h"
+#include "Chunk.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -71,32 +72,6 @@ int main() {
         0.5f, -0.5f, -0.5f,
         0.5f, -0.5f, 0.5f
     };
-    float texCoords[] = {
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-        1.f, 0.f,
-    };
     unsigned int indices[] = {
         0, 1, 3,
         3, 1, 2,
@@ -111,6 +86,58 @@ int main() {
         20, 21, 23,
         23, 21, 22
     };
+    float baseTexCoors[] = {
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 0.f,
+        1.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 0.f,
+        1.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 0.f,
+        1.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 0.f,
+        1.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 0.f,
+        1.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+
+        0.f, 0.f,
+        0.f, 1.f,
+        1.f, 0.f,
+        1.f, 0.f,
+        0.f, 1.f,
+        1.f, 1.f,
+    };
+
+    Chunk chunk;
+
+    std::vector<float> texCoords;
+    for (int j = 0; j < chunk.GetNumBlocks(); ++j) {
+        for (int i = 0; i < sizeof(baseTexCoors)/sizeof(float); ++i) {
+            texCoords.push_back(baseTexCoors[i]);
+        }
+    }
 
     unsigned int vbo, vao, ebo, tbo;
     Shader shader("../res/shaders/shader.vs", "../res/shaders/shader.fs");
@@ -120,19 +147,19 @@ int main() {
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, chunk.GetVertices().size() * sizeof(float), chunk.GetVertices().data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     glGenBuffers(1, &tbo);
     glBindBuffer(GL_ARRAY_BUFFER, tbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), texCoords.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
 
-    glGenBuffers(1, &ebo);
+    /*glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
 
     int width, height, nrChannels;
     unsigned char *data = stbi_load("../res/textures/Grass.jpg", &width, &height, &nrChannels, 0);
@@ -171,14 +198,16 @@ int main() {
         shader.Bind();
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        auto model = glm::mat4(1.0f);
+        //auto model = glm::mat4(1.0f);
 
         camera.Update(shader, dt);
 
-        shader.SetMat4("model", model);
+        //shader.SetMat4("model", model);
+
 
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+        // glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, chunk.GetVertices().size()/3);
         glBindVertexArray(0);
 
         shader.Unbind();

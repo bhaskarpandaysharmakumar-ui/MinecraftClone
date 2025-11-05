@@ -1,7 +1,6 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <stbi/stb_image.h>
 
@@ -41,87 +40,7 @@ int main() {
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    float vertices[] = {
-        -0.5f, 0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, -0.5f, 0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-
-        0.5f, 0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-
-        -0.5f, 0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, 0.5f,
-
-        -0.5f, -0.5f, 0.5f,
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, 0.5f
-    };
-    unsigned int indices[] = {
-        0, 1, 3,
-        3, 1, 2,
-        4, 5, 7,
-        7, 5, 6,
-        8, 9, 11,
-        11, 9, 10,
-        12, 13, 15,
-        15, 13, 14,
-        16, 17, 19,
-        19, 17, 18,
-        20, 21, 23,
-        23, 21, 22
-    };
-    float baseTexCoors[] = {
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 0.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 0.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 0.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 0.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 0.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-
+    float faceTexCoord[] = {
         0.f, 0.f,
         0.f, 1.f,
         1.f, 0.f,
@@ -133,13 +52,13 @@ int main() {
     Chunk chunk;
 
     std::vector<float> texCoords;
-    for (int j = 0; j < chunk.GetNumBlocks(); ++j) {
-        for (int i = 0; i < sizeof(baseTexCoors)/sizeof(float); ++i) {
-            texCoords.push_back(baseTexCoors[i]);
+    for (int j = 0; j < chunk.GetNumFaces(); ++j) {
+        for (int i = 0; i < sizeof(faceTexCoord)/sizeof(float); ++i) {
+            texCoords.push_back(faceTexCoord[i]);
         }
     }
 
-    unsigned int vbo, vao, ebo, tbo;
+    unsigned int vbo, vao, tbo;
     Shader shader("../res/shaders/shader.vs", "../res/shaders/shader.fs");
 
     glGenVertexArrays(1, &vao);
@@ -157,12 +76,8 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
 
-    /*glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
-
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("../res/textures/Grass.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load("../res/textures/Grass1.png", &width, &height, &nrChannels, 0);
 
     unsigned int texture;
     glGenTextures(1, &texture);
@@ -172,7 +87,7 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else {
@@ -198,15 +113,9 @@ int main() {
         shader.Bind();
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        //auto model = glm::mat4(1.0f);
-
         camera.Update(shader, dt);
 
-        //shader.SetMat4("model", model);
-
-
         glBindVertexArray(vao);
-        // glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
         glDrawArrays(GL_TRIANGLES, 0, chunk.GetVertices().size()/3);
         glBindVertexArray(0);
 

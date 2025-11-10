@@ -9,6 +9,7 @@
 #include "KeyboardInput.h"
 #include "Camera.h"
 #include "Chunk.h"
+#include "Renderer.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -40,41 +41,15 @@ int main() {
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    float faceTexCoord[] = {
-        0.f, 0.f,
-        0.f, 1.f,
-        1.f, 0.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        1.f, 1.f,
-    };
+    Chunk* chunk = new Chunk();
+    Chunk* chunk2 = new Chunk();
+    chunk2->Position.x = 32;
 
-    Chunk chunk;
-
-    std::vector<float> texCoords;
-    for (int j = 0; j < chunk.GetNumFaces(); ++j) {
-        for (int i = 0; i < sizeof(faceTexCoord)/sizeof(float); ++i) {
-            texCoords.push_back(faceTexCoord[i]);
-        }
-    }
-
-    unsigned int vbo, vao, tbo;
     Shader shader("../res/shaders/shader.vs", "../res/shaders/shader.fs");
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, chunk.GetVertices().size() * sizeof(float), chunk.GetVertices().data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glGenBuffers(1, &tbo);
-    glBindBuffer(GL_ARRAY_BUFFER, tbo);
-    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), texCoords.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
+    Renderer renderer;
+    renderer.AddChunk(*chunk);
+    renderer.AddChunk(*chunk2);
 
     int width, height, nrChannels;
     unsigned char *data = stbi_load("../res/textures/Grass1.png", &width, &height, &nrChannels, 0);
@@ -97,6 +72,7 @@ int main() {
     stbi_image_free(data);
 
     Camera camera;
+    camera.Position.y = 16;
 
     float dt = 0.f;
     float previousTime = (float) glfwGetTime();
@@ -104,7 +80,7 @@ int main() {
     while(!glfwWindowShouldClose(window))
     {
         glEnable(GL_DEPTH_TEST);
-        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClearColor(0.f/255.f, 0.f/255.f, 0.f/255.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float currentTime = (float) glfwGetTime();
@@ -115,9 +91,7 @@ int main() {
 
         camera.Update(shader, dt);
 
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, chunk.GetVertices().size()/3);
-        glBindVertexArray(0);
+        renderer.Render(shader);
 
         shader.Unbind();
         glBindTexture(GL_TEXTURE_2D, 0);

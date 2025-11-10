@@ -23,6 +23,8 @@ class Chunk {
 public:
     Chunk();
 
+    glm::vec3 Position;
+
     void GenerateAndAddVertices(const Block& block);
     std::vector<float>& GetVertices();
     int GetNumFaces();

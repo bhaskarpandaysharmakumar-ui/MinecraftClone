@@ -30,9 +30,9 @@ void Camera::Update(const Shader &shader, float dt) {
     if (KeyboardInput::KeyPressed(GLFW_KEY_D))
         Position += Speed * left * dt;
     if (KeyboardInput::KeyPressed(GLFW_KEY_E))
-        Position += Speed * up * dt;
+        Position += Speed * glm::vec3(0, 1, 0) * dt;
     if (KeyboardInput::KeyPressed(GLFW_KEY_Q))
-        Position -= Speed * up * dt;
+        Position -= Speed * glm::vec3(0, 1, 0) * dt;
 
     shader.SetMat4("view", view);
     shader.SetMat4("proj", proj);

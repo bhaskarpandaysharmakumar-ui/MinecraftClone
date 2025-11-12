@@ -1,11 +1,12 @@
 #include "Renderer.h"
 
+#include <iostream>
 #include <glad/glad.h>
 
 Renderer::Renderer() { }
 
-void Renderer::AddChunk(Chunk &chunk) {
-    ChunkRenderData data;
+void Renderer::AddChunk(Chunk* chunk) {
+    ChunkRenderData data{};
 
     float faceTexCoord[] = {
         0.f, 0.f,
@@ -16,7 +17,7 @@ void Renderer::AddChunk(Chunk &chunk) {
         1.f, 1.f,
     };
     std::vector<float> texCoords;
-    for (int j = 0; j < chunk.GetNumFaces(); ++j) {
+    for (int j = 0; j < chunk->GetVertices().size()/6; ++j) {
         for (int i = 0; i < sizeof(faceTexCoord)/sizeof(float); ++i) {
             texCoords.push_back(faceTexCoord[i]);
         }
@@ -27,7 +28,7 @@ void Renderer::AddChunk(Chunk &chunk) {
 
     glGenBuffers(1, &data.vbo);
     glBindBuffer(GL_ARRAY_BUFFER, data.vbo);
-    glBufferData(GL_ARRAY_BUFFER, chunk.GetVertices().size() * sizeof(float), chunk.GetVertices().data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, chunk->GetVertices().size() * sizeof(float), chunk->GetVertices().data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -43,11 +44,11 @@ void Renderer::AddChunk(Chunk &chunk) {
 void Renderer::Render(Shader& shader) {
     for (auto it = chunks.begin(); it != chunks.end(); ++it) {
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, it->second.Position);
+        model = glm::translate(model, it->second->Position);
         shader.SetMat4("model", model);
 
         glBindVertexArray(it->first.Vao);
-        glDrawArrays(GL_TRIANGLES, 0, it->second.GetVertices().size()/3);
+        glDrawArrays(GL_TRIANGLES, 0, it->second->GetVertices().size()/3);
         glBindVertexArray(0);
     }
 }

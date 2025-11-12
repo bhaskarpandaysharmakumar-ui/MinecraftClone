@@ -2,7 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-static constexpr int CHUNK_SIZE = 32;
+#include "Constants.h"
 
 enum BlockType {
     Air, Grass
@@ -25,12 +25,14 @@ public:
 
     glm::vec3 Position;
 
-    void GenerateAndAddVertices(const Block& block);
     std::vector<float>& GetVertices();
-    int GetNumFaces();
+    void GenerateChunk();
+    Block (&GetBlocks())[CHUNK_SIZE+2][CHUNK_SIZE+2][CHUNK_SIZE+2];
+
+    std::vector<float> vertices;
 
 private:
     Block blocks[CHUNK_SIZE+2][CHUNK_SIZE+2][CHUNK_SIZE+2]{};
-    std::vector<float> vertices;
-    int numFaces;
+
+    void GenerateVertices(const Block& block);
 };

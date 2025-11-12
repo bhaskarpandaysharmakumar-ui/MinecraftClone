@@ -51,7 +51,7 @@ double noise(double x, double y, double z) {
                           grad(p[BB + 1], x - 1, y - 1, z - 1))));
 }
 
-Chunk::Chunk() : numFaces(0), Position(0, 8, 0) {
+Chunk::Chunk() : Position(0, 8, 0) {
     for (int i = 0; i < 25; ++i) {
         p[256 + i] = p[i] = permutation[i];
     }
@@ -64,11 +64,16 @@ Chunk::Chunk() : numFaces(0), Position(0, 8, 0) {
                 double y = 20 * noise((i+2)/64.f, (j +10)/32.f, (k+20)/32.f);
                 if ((int)abs(y) > 0) {
                     blocks[i][(int)glm::abs(y)][k].Type = Grass;
-                    numFaces += 6;
                 }
             }
         }
     }
+
+    GenerateChunk();
+}
+
+void Chunk::GenerateChunk() {
+    vertices.clear();
 
     for (int i = 1; i < CHUNK_SIZE + 1; ++i) {
         for (int j = 1; j < CHUNK_SIZE + 1; ++j) {
@@ -77,35 +82,29 @@ Chunk::Chunk() : numFaces(0), Position(0, 8, 0) {
 
                 if (blocks[i - 1][j][k].Type == Grass) {
                     blocks[i][j][k].LeftVisible = false;
-                    numFaces--;
                 }
                 if (blocks[i + 1][j][k].Type == Grass) {
                     blocks[i][j][k].RightVisible = false;
-                    numFaces--;
                 }
                 if (blocks[i][j + 1][k].Type == Grass) {
                     blocks[i][j][k].TopVisible = false;
-                    numFaces--;
                 }
                 if (blocks[i][j - 1][k].Type == Grass) {
                     blocks[i][j][k].BottomVisible = false;
-                    numFaces--;
                 }
                 if (blocks[i][j][k - 1].Type == Grass) {
                     blocks[i][j][k].BackVisible = false;
-                    numFaces--;
                 }
                 if (blocks[i][j][k + 1].Type == Grass) {
                     blocks[i][j][k].FrontVisible = false;
-                    numFaces--;
                 }
-                GenerateAndAddVertices(blocks[i][j][k]);
+                GenerateVertices(blocks[i][j][k]);
             }
         }
     }
 }
 
-void Chunk::GenerateAndAddVertices(const Block &block) {
+void Chunk::GenerateVertices(const Block &block) {
     float data[] = {
         // back
         -0.5f, 0.5f, -0.5f,
@@ -155,28 +154,30 @@ void Chunk::GenerateAndAddVertices(const Block &block) {
         -0.5f, -0.5f, -0.5f,
         0.5f, -0.5f, -0.5f,
     };
-    std::vector<float> vertices;
+    std::vector<float> v;
     if (block.BackVisible)
         for (int i = 0; i <= 17; ++i)
-            vertices.push_back(data[i]);
+            v.push_back(data[i]);
     if (block.FrontVisible)
         for (int i = 18; i <= 17 + 18; ++i)
-            vertices.push_back(data[i]);
+            v.push_back(data[i]);
     if (block.RightVisible)
         for (int i = 18 * 2; i <= 17 + 18 * 2; ++i)
-            vertices.push_back(data[i]);
+            v.push_back(data[i]);
     if (block.LeftVisible)
         for (int i = 18 * 3; i <= 17 + 18 * 3; ++i)
-            vertices.push_back(data[i]);
+            v.push_back(data[i]);
     if (block.TopVisible)
         for (int i = 18 * 4; i <= 17 + 18 * 4; ++i)
-            vertices.push_back(data[i]);
+            v.push_back(data[i]);
     if (block.BottomVisible)
         for (int i = 18 * 5; i <= 17 + 18 * 5; ++i)
-            vertices.push_back(data[i]);
+            v.push_back(data[i]);
 
-    for (int i = 0; i < vertices.size(); i += 3) {
-        glm::vec4 ndcPos = {vertices[i], vertices[i + 1], vertices[i + 2], 1};
+    if (v.empty()) return;
+
+    for (int i = 0; i < v.size() - 2; i += 3) {
+        glm::vec4 ndcPos = {v[i], v[i + 1], v[i + 2], 1};
         glm::mat4 model = glm::mat4(1.f);
         model = glm::translate(model, {block.Position.x - CHUNK_SIZE/2.f,
                                             block.Position.y,
@@ -188,10 +189,10 @@ void Chunk::GenerateAndAddVertices(const Block &block) {
     }
 }
 
-std::vector<float> &Chunk::GetVertices() {
+std::vector<float>& Chunk::GetVertices() {
     return vertices;
 }
 
-int Chunk::GetNumFaces() {
-    return numFaces;
+Block (&Chunk::GetBlocks())[CHUNK_SIZE+2][CHUNK_SIZE+2][CHUNK_SIZE+2] {
+    return blocks;
 }

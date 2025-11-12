@@ -1,55 +1,24 @@
 #include <iostream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <stbi/stb_image.h>
 
-#include "Shader.h"
-#include "MouseInput.h"
-#include "KeyboardInput.h"
+#include "core/Window.h"
+#include "core/Shader.h"
 #include "Camera.h"
-#include "Chunk.h"
 #include "Renderer.h"
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
+#include "Terrain.h"
+#include "input/KeyboardInput.h"
 
 int main() {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Woo-Hoo", nullptr, nullptr);
-    if (window == nullptr) {
-        std::cout << "Failed to create GLFW window!\n";
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    glfwSwapInterval(0);
-
-    gladLoadGL();
-
-    glViewport(0, 0, 1280, 720);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    glfwSetCursorPosCallback(window, MouseInput::CursorPosCallback);
-    glfwSetKeyCallback(window, KeyboardInput::KeyCallback);
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    Chunk* chunk = new Chunk();
-    Chunk* chunk2 = new Chunk();
-    chunk2->Position.x = 32;
-
-    Shader shader("../res/shaders/shader.vs", "../res/shaders/shader.fs");
-
+    Window window;
+    Terrain terrain;
+    Shader shader{"../res/shaders/shader.vs", "../res/shaders/shader.fs"};
     Renderer renderer;
-    renderer.AddChunk(*chunk);
-    renderer.AddChunk(*chunk2);
+
+    for (int i = 0; i < RENDER_DIST; ++i) {
+        for (int j = 0; j < RENDER_DIST; ++j) {
+            renderer.AddChunk(terrain.GetChunks()[i][j]);
+        }
+    }
 
     int width, height, nrChannels;
     unsigned char *data = stbi_load("../res/textures/Grass1.png", &width, &height, &nrChannels, 0);
@@ -72,19 +41,25 @@ int main() {
     stbi_image_free(data);
 
     Camera camera;
-    camera.Position.y = 16;
+    camera.Position.y = 8;
 
     float dt = 0.f;
     float previousTime = (float) glfwGetTime();
 
-    while(!glfwWindowShouldClose(window))
+    bool wireframeMode = false;
+
+    while(window.ShouldNotClose())
     {
-        glEnable(GL_DEPTH_TEST);
-        glClearColor(0.f/255.f, 0.f/255.f, 0.f/255.f, 1.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        window.Clear();
 
         float currentTime = (float) glfwGetTime();
         dt = currentTime - previousTime;
+
+        if (KeyboardInput::KeyClicked(GLFW_KEY_TAB)) {
+            wireframeMode = !wireframeMode;
+        }
+
+        wireframeMode ? glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         shader.Bind();
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -97,13 +72,11 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         previousTime = currentTime;
-        MouseInput::EndFrame();
-        KeyboardInput::EndFrame();
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        window.EndFrame();
     }
 
-    glfwTerminate();
+    window.Terminate();
+
     return 0;
 }

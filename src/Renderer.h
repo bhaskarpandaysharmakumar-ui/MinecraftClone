@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #include "Chunk.h"
-#include "Shader.h"
+#include "core/Shader.h"
 
 struct ChunkRenderData {
     unsigned int Vao, vbo, tbo;
@@ -24,9 +24,9 @@ class Renderer {
 public:
     Renderer();
 
-    void AddChunk(Chunk& chunk);
+    void AddChunk(Chunk* chunk);
     void Render(Shader& shader);
 
 private:
-    std::unordered_map<ChunkRenderData, Chunk> chunks;
+    std::unordered_map<ChunkRenderData, Chunk*> chunks;
 };

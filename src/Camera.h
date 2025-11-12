@@ -2,7 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Shader.h"
+#include "core/Shader.h"
 
 class Camera {
 public:

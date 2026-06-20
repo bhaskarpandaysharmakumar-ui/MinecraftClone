@@ -1,5 +1,6 @@
 This is how it currently looks
 ![ScreenShot](res/screenshots/s2.png)
+![ScreenShot](res/screenshots/s3.png)
 
 I do the linear transformations on the cpu side and then send it to the gpu. 
 It has chunk loading and unloading - I just add and remove chunks from a hashtable, from which chunks are rendered.

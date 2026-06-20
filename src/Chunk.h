@@ -21,18 +21,18 @@ struct Block {
 
 class Chunk {
 public:
-    Chunk();
+    Chunk(glm::vec3 pos = {0, 0, 0});
 
     glm::vec3 Position;
 
     std::vector<float>& GetVertices();
     void GenerateChunk();
     Block (&GetBlocks())[CHUNK_SIZE+2][CHUNK_SIZE+2][CHUNK_SIZE+2];
-
-    std::vector<float> vertices;
+    void Init();
 
 private:
-    Block blocks[CHUNK_SIZE+2][CHUNK_SIZE+2][CHUNK_SIZE+2]{};
+    Block blocks[CHUNK_SIZE+2][CHUNK_SIZE+2][CHUNK_SIZE+2];
+    std::vector<float> vertices;
 
     void GenerateVertices(const Block& block);
 };

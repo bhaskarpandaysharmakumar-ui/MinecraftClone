@@ -6,7 +6,7 @@
 #include "core/Shader.h"
 
 struct ChunkRenderData {
-    unsigned int Vao, vbo, tbo;
+    unsigned int Vao = 0, Vbo = 0, Tbo = 0;
 
     bool operator==(const ChunkRenderData& other) const {
         return this->Vao == other.Vao;
@@ -24,8 +24,8 @@ class Renderer {
 public:
     Renderer();
 
-    void AddChunk(Chunk* chunk);
     void Render(Shader& shader);
+    void AddChunk(Chunk* chunk);
 
 private:
     std::unordered_map<ChunkRenderData, Chunk*> chunks;

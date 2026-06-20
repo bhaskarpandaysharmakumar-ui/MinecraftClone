@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include <stbi/stb_image.h>
 
 #include "core/Window.h"
@@ -13,12 +14,6 @@ int main() {
     Terrain terrain;
     Shader shader{"../res/shaders/shader.vs", "../res/shaders/shader.fs"};
     Renderer renderer;
-
-    for (int i = 0; i < RENDER_DIST; ++i) {
-        for (int j = 0; j < RENDER_DIST; ++j) {
-            renderer.AddChunk(terrain.GetChunks()[i][j]);
-        }
-    }
 
     int width, height, nrChannels;
     unsigned char *data = stbi_load("../res/textures/Grass1.png", &width, &height, &nrChannels, 0);
@@ -41,12 +36,18 @@ int main() {
     stbi_image_free(data);
 
     Camera camera;
-    camera.Position.y = 8;
+    // camera.Position = {CHUNK_SIZE * (RENDER_DIST - 1) * 0.5f, 8, CHUNK_SIZE * (RENDER_DIST - 1) * 0.5f};
+    camera.Position.y = 8.f;
 
     float dt = 0.f;
     float previousTime = (float) glfwGetTime();
 
+    glm::vec3 prevCamPos(0, 0, 0);
+
     bool wireframeMode = false;
+
+    float tickTime = 0.f;
+    float tickTimeElapsed = 0.f;
 
     while(window.ShouldNotClose())
     {
@@ -54,6 +55,8 @@ int main() {
 
         float currentTime = (float) glfwGetTime();
         dt = currentTime - previousTime;
+
+        tickTimeElapsed += dt;
 
         if (KeyboardInput::KeyClicked(GLFW_KEY_TAB)) {
             wireframeMode = !wireframeMode;
@@ -65,6 +68,27 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texture);
 
         camera.Update(shader, dt);
+
+        // std::cout << dt << '\n';
+
+        glm::vec3 camMoveDir = camera.Position - prevCamPos;
+        prevCamPos = camera.Position;
+
+        if (tickTimeElapsed >= tickTime) {
+            terrain.Update(camera.Position, camMoveDir);
+            tickTimeElapsed = 0.f;
+        }
+        // std::cout << camMoveDir.x << ", " << camMoveDir.z << "\n";
+
+        // for (auto it = terrain.GetChunks().begin(); it != terrain.GetChunks().end(); ++it) {
+        //     for (Chunk* chunk : *it) {
+        //         renderer.AddChunk(chunk);
+        //     }
+        // }
+
+        for (auto& it : terrain.GetChunks()) {
+            renderer.AddChunk(it.second);
+        }
 
         renderer.Render(shader);
 

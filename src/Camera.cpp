@@ -4,7 +4,7 @@
 #include "input/KeyboardInput.h"
 
 Camera::Camera(float fov, float aspect, float near, float far) :
-    Position(0, 0, 3), Sensitivity(0.08f), Speed(10.f), yaw(0.f), pitch(0.f) {
+    Position(0, 0, 0), Sensitivity(0.08f), Speed(10.f), yaw(0.f), pitch(0.f) {
     proj = glm::perspective(glm::radians(fov), aspect, near, far);
 }
 

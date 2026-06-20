@@ -1,6 +1,8 @@
 #include "Chunk.h"
 
+#include <cstring>
 #include <iostream>
+#include <cstdlib>
 
 double fade(double t) { return t * t * t * (t * (t * 6 - 15) + 10); }
 double lerp(double t, double a, double b) { return a + t * (b - a); }
@@ -51,17 +53,23 @@ double noise(double x, double y, double z) {
                           grad(p[BB + 1], x - 1, y - 1, z - 1))));
 }
 
-Chunk::Chunk() : Position(0, 8, 0) {
+Chunk::Chunk(glm::vec3 pos) {
+    Position = pos;
+
     for (int i = 0; i < 25; ++i) {
         p[256 + i] = p[i] = permutation[i];
     }
 
+    Init();
+}
+
+void Chunk::Init() {
     for (int i = 1; i < CHUNK_SIZE + 1; ++i) {
         for (int j = 1; j < CHUNK_SIZE + 1; ++j) {
             for (int k = 1; k < CHUNK_SIZE + 1; ++k) {
                 blocks[i][j][k].Position = {i, j, k};
 
-                double y = 20 * noise((i+2)/64.f, (j +10)/32.f, (k+20)/32.f);
+                double y = 25 * noise((i*2)/(32.f), (j+15)/32.f, (k+20)/32.f);
                 if ((int)abs(y) > 0) {
                     blocks[i][(int)glm::abs(y)][k].Type = Grass;
                 }
@@ -179,9 +187,9 @@ void Chunk::GenerateVertices(const Block &block) {
     for (int i = 0; i < v.size() - 2; i += 3) {
         glm::vec4 ndcPos = {v[i], v[i + 1], v[i + 2], 1};
         glm::mat4 model = glm::mat4(1.f);
-        model = glm::translate(model, {block.Position.x - CHUNK_SIZE/2.f,
+        model = glm::translate(model, {block.Position.x - (CHUNK_SIZE + 1)/2.f,
                                             block.Position.y,
-                                            block.Position.z - CHUNK_SIZE/2.f});
+                                            block.Position.z - (CHUNK_SIZE + 1)/2.f});
         glm::vec4 transformedPos = model * ndcPos;
         this->vertices.push_back(transformedPos.x);
         this->vertices.push_back(transformedPos.y);
